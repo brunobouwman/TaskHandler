@@ -8,6 +8,7 @@ class TaskHandler {
     const backdrop = document.getElementById('backdrop-id');
     const addModal = document.getElementById('add-task-modal-id');
     const infoModal = document.getElementById('more-info-modal-id');
+    this.clearInputs();
     backdrop.classList.remove('visible');
     addModal.classList.remove('visible');
     infoModal.classList.remove('visible');
@@ -16,7 +17,7 @@ class TaskHandler {
   showBackdrop() {
     const backdrop = document.getElementById('backdrop-id');
     backdrop.classList.add('visible');
-    backdrop.addEventListener('click', this.removeBackAndModal);
+    backdrop.addEventListener('click', this.removeBackAndModal.bind(this));
   }
 
   showAddModal() {
@@ -36,13 +37,9 @@ class TaskHandler {
 
   addTaskHandler() {
     this.showAddModal();
-    //   const addTaskConfirm = document.getElementById('add-task-button-confirm');
-    //   console.log(addTaskConfirm);
-    //   addTaskConfirm.addEventListener('click', this.taskRender.bind(this));
   }
 
   taskRender() {
-    this.removeBackAndModal();
     const onGoingTaskSection = document.querySelector('ul');
     const taskElement = document.createElement('li');
     taskElement.id = this.id;
@@ -56,6 +53,7 @@ class TaskHandler {
       extraInfo: extraInfo.value,
       id: taskElement.id,
     };
+    this.removeBackAndModal();
     taskElement.innerHTML = `
         <h2>${newMovie.title}</h2>
         <p>${newMovie.description}</p>
@@ -65,16 +63,17 @@ class TaskHandler {
     const finishBtn = taskElement.querySelector('button:last-of-type');
     moreInfoBtn.addEventListener(
       'click',
-      this.extraInfoHandler.bind(this, taskElement.id)
+      this.extraInfoHandler.bind(this, newMovie.id)
     );
     finishBtn.addEventListener(
       'click',
-      this.finishTask.bind(this, newMovie, taskElement.id, taskElement)
+      this.finishTask.bind(this, newMovie, taskElement)
     );
     this.onGoingTasks.push(newMovie);
     onGoingTaskSection.prepend(taskElement);
     this.id++;
     this.clearInputs();
+    console.log(this.onGoingTasks);
   }
 
   extraInfoHandler(id) {
@@ -85,16 +84,23 @@ class TaskHandler {
       if (tasks.id === id) {
         infoModal.innerHTML = `
             <p>${tasks.extraInfo}</p>`;
+            break;
       }
     }
   }
 
-  finishTask(newMovie, id, element) {
+  finishTask(newMovie, element) {
+    let taskIndex = 0;
     const onGoingTaskSection = document.querySelector('ul');
     const finishedTaskList = document.getElementById('finished-list');
-    this.onGoingTasks.splice(newMovie.id, 1);
-    this.finishedTasks.push(newMovie);
-    onGoingTaskSection.children[id].remove();
+    for (const task of this.onGoingTasks) {
+      if(task.id === newMovie.id) {
+        break;
+      }
+      else taskIndex++;
+    }
+    this.onGoingTasks.splice(taskIndex, 1);
+    onGoingTaskSection.children[taskIndex].remove();
     element.innerHTML = `<h2>${newMovie.title}</h2>
     <p>${newMovie.description}</p>
     <button class="alt">More Info</button>
@@ -102,11 +108,29 @@ class TaskHandler {
     `;
     finishedTaskList.prepend(element);
     const moreInfoBtn = element.querySelector('button');
-    const ActivateBtn = element.querySelector('button:last-of-type');
+    const activateBtn = element.querySelector('button:last-of-type');
     moreInfoBtn.addEventListener(
       'click',
       this.extraInfoHandler.bind(this, element.id)
     );
+    activateBtn.addEventListener('click', this.activateTask.bind(this, element));
+  }
+
+  activateTask(element) {
+    const onGoingTaskSection = document.querySelector('ul');
+    const finishedTaskList = document.getElementById('finished-list');
+    let taskIndex = 0;
+    for (const task of this.finishedTasks) { //Try dictonaries
+      if (task.id === element.id) {
+        break;
+      }
+      else taskIndex++;
+    };
+    const task = this.finishedTasks.splice(taskIndex ,1);
+    this.onGoingTasks.push(task);
+    finishedTaskList.children[taskIndex].remove();
+    onGoingTaskSection.append(element);
+
   }
 }
 
@@ -114,5 +138,4 @@ const App = new TaskHandler();
 const addTaskBtn = document.getElementById('add-task-btn');
 const addTaskConfirm = document.getElementById('add-task-button-confirm');
 addTaskConfirm.addEventListener('click', App.taskRender.bind(App));
-console.log(addTaskBtn);
 addTaskBtn.addEventListener('click', App.addTaskHandler.bind(App));
