@@ -36,6 +36,7 @@ class TaskHandler {
   }
 
   addTaskHandler() {
+    // $("#title").focus();
     this.showAddModal();
   }
 
@@ -70,7 +71,7 @@ class TaskHandler {
       this.finishTask.bind(this, newMovie, taskElement)
     );
     this.onGoingTasks.push(newMovie);
-    onGoingTaskSection.prepend(taskElement);
+    onGoingTaskSection.append(taskElement);
     this.id++;
     this.clearInputs();
     console.log(this.onGoingTasks);
@@ -137,5 +138,5 @@ class TaskHandler {
 const App = new TaskHandler();
 const addTaskBtn = document.getElementById('add-task-btn');
 const addTaskConfirm = document.getElementById('add-task-button-confirm');
-addTaskConfirm.addEventListener('click', App.taskRender.bind(App));
 addTaskBtn.addEventListener('click', App.addTaskHandler.bind(App));
+addTaskConfirm.addEventListener('click', App.taskRender.bind(App));
