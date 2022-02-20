@@ -14,21 +14,19 @@ class Tasks {
 
   constructor() {}
 
-  newTaskObj(title, description, extraInfo, id, action, taskEl) {
+  newTaskObj(title, description, extraInfo, id, taskEl) {
     const newTask = new TaskCreator(title, description, extraInfo, id);
-    if (action === 'Finish') {
-      this.render(action, false, taskEl, newTask);
-    } else {
-      this.render(action, false, taskEl, newTask);
-    }
+    this.render('Finish', taskEl, newTask);
   }
 
   newTaskElement(action, alreadyExists, element, newTask) {
-    console.log(action, alreadyExists);
-    if (alreadyExists) {
-      element.querySelector('button:last-of-type').textContent = action;
-      this.render(action, alreadyExists, element, newTask);
-    }else {
+    if (action === 'Finish' && alreadyExists) {
+      element.querySelector('button:last-of-type').textContent = 'Activate';
+      this.render('Activate', element, newTask);
+    }else if(action === 'Activate' && alreadyExists) {
+      element.querySelector('button:last-of-type').textContent = 'Finish';
+      this.render('Finish', element, newTask);
+    }else if(!alreadyExists) {
       const title = document.getElementById('title');
       const description = document.getElementById('description');
       const extraInfo = document.getElementById('extra-info');
@@ -45,79 +43,80 @@ class Tasks {
         description.value,
         extraInfo.value,
         this.id,
-        action,
         taskElement
       );
     }
   }
 
-  render(action, alreadyExists, taskEl, newTask) {
+  clearEventListeners(element) {
+    const clonedElement = element.cloneNode(true); //Makes a deep clone
+    element.replaceWith(clonedElement);
+    return clonedElement;
+  }
+
+  render(action, taskEl, newTask) {
     const handlers = new TaskHandler();
     const onGoingTaskList = document.querySelector('ul');
     const finishedTaskList = document.getElementById('finished-list');
     handlers.removeBackAndModal();
-    if (!alreadyExists) {
+    const moreInfoBtn = taskEl.querySelector('button');
+    let actionBtn = taskEl.querySelector('button:last-of-type');
+    actionBtn = this.clearEventListeners(actionBtn);
+    if (action === 'Finish') {
+      console.log('onGoingBeforeArray->', this.onGoingTasks);
       this.onGoingTasks.push(newTask);
+      console.log('onGoingAfterArray->', this.onGoingTasks);
+      console.log('onGoingBeforeEl->', onGoingTaskList);
       onGoingTaskList.append(taskEl);
-        const moreInfoBtn = taskEl.querySelector('button');
-        const actionBtn = taskEl.querySelector('button:last-of-type');
-        moreInfoBtn.addEventListener(
-          'click',
-          handlers.extraInfoHandler.bind(handlers, newTask, this.onGoingTasks)
+      console.log('onGoingAfterEl->', onGoingTaskList);
+      moreInfoBtn.addEventListener(
+        'click',
+        handlers.extraInfoHandler.bind(
+          handlers,
+          newTask,
+          this.onGoingTasks,
+          this.finishedTasks
+        )
         );
         actionBtn.addEventListener(
           'click',
           handlers.actionTaskHandler.bind(
             handlers,
             newTask,
-            taskEl,
-            action,
-            this.onGoingTasks
-          )
-        );
-      } else if (alreadyExists && action === 'Activate') {
-        this.onGoingTasks.push(newTask);
-        onGoingTaskList.append(taskEl);
-        const moreInfoBtn = taskEl.querySelector('button');
-        const actionBtn = taskEl.querySelector('button:last-of-type');
-        moreInfoBtn.removeEventListener('click', handlers.extraInfoHandler);
-        actionBtn.removeEventListener('click', handlers.actionTaskHandler);
-        moreInfoBtn.addEventListener(
-          'click',
-          handlers.extraInfoHandler.bind(handlers, newTask, this.finishedTasks)
-        );
-        actionBtn.addEventListener(
-          'click',
-          handlers.actionTaskHandler.bind(
-            handlers,
-            newTask,
-            taskEl,
-            action,
-            this.finishedTasks
-          )
-        );
-      } else if (alreadyExists && action === 'Finish') {
+          taskEl,
+          action,
+          this.onGoingTasks,
+          this.finishedTasks
+        )
+      );
+    } else {
+      console.log('FinishBeforeArray->', this.finishedTasks);
       this.finishedTasks.push(newTask);
+      console.log('FinishAfterArray->', this.finishedTasks);
+      console.log('FinishBeforeEl->', finishedTaskList);
       finishedTaskList.append(taskEl);
-      const moreInfoBtn = taskEl.querySelector('button');
-        const actionBtn = taskEl.querySelector('button:last-of-type');
-        moreInfoBtn.removeEventListener('click', handlers.extraInfoHandler);
-        actionBtn.removeEventListener('click', handlers.actionTaskHandler);
-        moreInfoBtn.addEventListener(
-          'click',
-          handlers.extraInfoHandler.bind(handlers, newTask, this.onGoingTasks)
-        );
-        actionBtn.addEventListener(
-          'click',
-          handlers.actionTaskHandler.bind(
-            handlers,
-            newTask,
-            taskEl,
-            action,
-            this.onGoingTasks
-          )
-        );
-       }
+      console.log('FinishAfterEl->', finishedTaskList);
+      moreInfoBtn.addEventListener(
+        'click',
+        handlers.extraInfoHandler.bind(
+          handlers,
+          newTask,
+          this.onGoingTasks,
+          this.finishedTasks
+        )
+      );
+      actionBtn.addEventListener(
+        'click',
+        handlers.actionTaskHandler.bind(
+          handlers,
+          newTask,
+          taskEl,
+          action,
+          this.onGoingTasks,
+          this.finishedTasks
+        )
+      );
+    }
     this.id++;
     handlers.clearInputs();
   }
@@ -166,12 +165,12 @@ class TaskHandler extends Tasks {
     this.showAddModal();
   }
 
-  extraInfoHandler(taskObj, taskArray) {
+  extraInfoHandler(taskObj, onGoingTasks, finishedTasks) {
     const infoModal = document.getElementById('more-info-modal-id');
     this.showBackdrop();
     infoModal.classList.add('visible');
-    if (taskArray.includes(taskObj)) {
-      for (const task of taskArray) {
+    if (onGoingTasks.includes(taskObj)) {
+      for (const task of onGoingTasks) {
         if (task.id === taskObj.id) {
           infoModal.innerHTML = `
             <p>${task.extraInfo}</p>`;
@@ -179,7 +178,7 @@ class TaskHandler extends Tasks {
         }
       }
     } else {
-      for (const task of taskArray) {
+      for (const task of finishedTasks) {
         if (task.id === taskObj.id) {
           infoModal.innerHTML = `
         <p>${task.extraInfo}</p>`;
@@ -189,57 +188,39 @@ class TaskHandler extends Tasks {
     }
   }
 
-  actionTaskHandler(newTask, element, action, taskArray) {
-    console.log(action);
-    let taskIndex = 0;
+  actionTaskHandler(newTask, element, action, onGoingTasksArray, finishedTasksArray) {
     const onGoingTaskList = document.querySelector('ul');
     const finishedTaskList = document.getElementById('finished-list');
-    for (const task of taskArray) {
-      if (task.id === newTask.id) {
-        break;
-      } else taskIndex++;
-    }
+    const objIndex = taskArray.findIndex(p => p.id === newTask.id);
+    // for (const task of taskArray) {
+    //   if (task.id === newTask.id) {
+    //     break;
+    //   } else taskIndex++;
+    // }
     if (action === 'Finish') {
-      if(onGoingTaskList.children.length !== 0){
-        onGoingTaskList.children[taskIndex].remove();
-        taskArray.splice(taskIndex, 1);
+      if (onGoingTaskList.children.length !== 0) {
+        console.log('ongoingBeforeEl->', onGoingTaskList.children.length);
+        onGoingTaskList.children[objIndex].remove();
+        console.log('ongoingAftEl->', onGoingTaskList.children.length);
+        console.log('onGoingBeforeArray->', taskArray);
+        taskArray.splice(objIndex, 1);
+        console.log('onGoingAfterArray->', taskArray);
+
+        // taskArray = taskArray.filter(p => p.id !== newTask.id); // filters every element but the one we want to remove
       }
-        this.newTaskElement('Activate', true, element, newTask);
+      this.newTaskElement(action, true, element, newTask);
     } else {
-      if(finishedTaskList.children.length !== 0) {
-      finishedTaskList.children[taskIndex].remove();
-      taskArray.splice(taskIndex, 1);
+      if (finishedTaskList.children.length !== 0) {
+        console.log('finishedBeforeEl->', finishedTaskList.children.length);
+        finishedTaskList.children[objIndex].remove();
+        console.log('finishedAfterEl->', finishedTaskList.children.length);
+        console.log('finishedBeforeArray->', taskArray);
+        taskArray.splice(objIndex, 1);
+        console.log('finishedAfterArray->', taskArray);
       }
-      this.newTaskElement('Finish', true, element, newTask);
+      this.newTaskElement(action, true, element, newTask);
     }
-
-    // const moreInfoBtn = element.querySelector('button');
-    // const activateBtn = element.querySelector('button:last-of-type');
-    // moreInfoBtn.addEventListener(
-    //   'click',
-    //   this.extraInfoHandler.bind(this, element.id)
-    // );
-    // activateBtn.addEventListener(
-    //   'click',
-    //   this.actionTaskHandler.bind(this, element)
-    // );
   }
-
-  //   activateTaskHandler(element, newTask) {
-  //     const onGoingTaskList = document.querySelector('ul');
-  //     const finishedTaskList = document.getElementById('finished-list');
-  //     let taskIndex = 0;
-  //     for (const task of this.finishedTasks) {
-  //       //Try dictonaries
-  //       if (task.id === element.id) {
-  //         break;
-  //       } else taskIndex++;
-  //     }
-  //     const task = this.finishedTasks.splice(taskIndex, 1);
-  //     this.onGoingTasks.push(task);
-  //     finishedTaskList.children[taskIndex].remove();
-  //     onGoingTaskSection.append(element);
-  //   }
 }
 
 const App = new TaskHandler();
