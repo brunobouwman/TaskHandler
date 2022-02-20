@@ -16,36 +16,49 @@ class Tasks {
 
   newTaskObj(title, description, extraInfo, id, taskEl) {
     const newTask = new TaskCreator(title, description, extraInfo, id);
-    this.render('Finish', taskEl, newTask);
+    this.render('Finish', taskEl, newTask, id);
   }
 
-  newTaskElement(action, alreadyExists, element, newTask) {
+  newTaskElement(
+    action,
+    alreadyExists,
+    element,
+    newTask,
+    updatedArray,
+    id
+  ) {
     if (action === 'Finish' && alreadyExists) {
+      this.onGoingTasks = [...updatedArray];
+      console.log(action, 'copiedonGoingArray->', this.onGoingTasks);
       element.querySelector('button:last-of-type').textContent = 'Activate';
-      this.render('Activate', element, newTask);
-    } else if (action === 'Activate' && alreadyExists) {
+      this.render('Activate', element, newTask, id);
+    } else {
+      this.finishedTasks = [...updatedArray];
+      console.log(action, 'copiedonFinishedArray->', this.finishedTasks);
       element.querySelector('button:last-of-type').textContent = 'Finish';
-      this.render('Finish', element, newTask);
-    } else if (!alreadyExists) {
-      const title = document.getElementById('title');
-      const description = document.getElementById('description');
-      const extraInfo = document.getElementById('extra-info');
-      const taskElement = document.createElement('li');
-      taskElement.id = this.id;
-      taskElement.classList = 'card';
-      taskElement.innerHTML = `
+      this.render('Finish', element, newTask, id);
+    }
+  }
+
+  createTask(action) {
+    const title = document.getElementById('title');
+    const description = document.getElementById('description');
+    const extraInfo = document.getElementById('extra-info');
+    const taskElement = document.createElement('li');
+    taskElement.id = this.id;
+    taskElement.classList = 'card';
+    taskElement.innerHTML = `
     <h2>${title.value}</h2>
     <p>${description.value}</p>
     <button class="alt">More Info</button>
     <button >${action}</button>`;
-      this.newTaskObj(
-        title.value,
-        description.value,
-        extraInfo.value,
-        this.id,
-        taskElement
-      );
-    }
+    this.newTaskObj(
+      title.value,
+      description.value,
+      extraInfo.value,
+      this.id,
+      taskElement
+    );
   }
 
   clearEventListeners(element) {
@@ -54,7 +67,7 @@ class Tasks {
     return clonedElement;
   }
 
-  render(action, taskEl, newTask) {
+  render(action, taskEl, newTask, id) {
     const handlers = new TaskHandler();
     const onGoingTaskList = document.querySelector('ul');
     const finishedTaskList = document.getElementById('finished-list');
@@ -63,35 +76,56 @@ class Tasks {
     let actionBtn = taskEl.querySelector('button:last-of-type');
     actionBtn = this.clearEventListeners(actionBtn);
     if (action === 'Finish') {
-      console.log('onGoingBeforeArray->', this.onGoingTasks);
+      console.log('onGoingBeforeArrayRender->', this.onGoingTasks);
       this.onGoingTasks.push(newTask);
-      console.log('onGoingAfterArray->', this.onGoingTasks);
-      console.log('onGoingBeforeEl->', onGoingTaskList);
+      console.log('onGoingAfterArrayRender->', this.onGoingTasks);
       onGoingTaskList.append(taskEl);
-      console.log('onGoingAfterEl->', onGoingTaskList);
       moreInfoBtn.addEventListener(
         'click',
-        handlers.extraInfoHandler.bind(handlers, newTask, this.onGoingTasks, this.finishedTasks)
+        handlers.extraInfoHandler.bind(
+          handlers,
+          newTask,
+          this.onGoingTasks,
+          this.finishedTasks
+        )
       );
       actionBtn.addEventListener(
         'click',
-        handlers.actionTaskHandler.bind(handlers, newTask, taskEl, action, this.onGoingTasks, this.finishedTasks)
+        handlers.actionTaskHandler.bind(
+          handlers,
+          newTask,
+          taskEl,
+          action,
+          this.onGoingTasks,
+          id
+        )
       );
+      console.log('eventGoing->', this.onGoingTasks);
     } else {
-      console.log('FinishBeforeArray->', this.finishedTasks);
+      console.log('FinishBeforeArrayRender->', this.finishedTasks);
       this.finishedTasks.push(newTask);
-      console.log('FinishAfterArray->', this.finishedTasks);
-      console.log('FinishBeforeEl->', finishedTaskList);
+      console.log('FinishAfterArrayRender->', this.finishedTasks);
       finishedTaskList.append(taskEl);
-      console.log('FinishAfterEl->', finishedTaskList);
       moreInfoBtn.addEventListener(
         'click',
-        handlers.extraInfoHandler.bind(handlers, newTask, this.onGoingTasks, this.finishedTasks)
+        handlers.extraInfoHandler.bind(
+          handlers,
+          newTask,
+          this.onGoingTasks,
+          this.finishedTasks
+        )
       );
       actionBtn.addEventListener(
         'click',
-        handlers.actionTaskHandler.bind(handlers, newTask, taskEl, action, this.onGoingTasks, this.finishedTasks)
+        handlers.actionTaskHandler.bind(
+          handlers,
+          newTask,
+          taskEl,
+          action,
+          this.finishedTasks
+        )
       );
+      console.log('eventFinsihed->', this.finishedTasks);
     }
     this.id++;
     handlers.clearInputs();
@@ -142,6 +176,7 @@ class TaskHandler extends Tasks {
   }
 
   extraInfoHandler(taskObj, onGoingTasks, finishedTasks) {
+    console.log('ongoing->',  onGoingTasks,'finish->', finishedTasks)
     const infoModal = document.getElementById('more-info-modal-id');
     this.showBackdrop();
     infoModal.classList.add('visible');
@@ -150,7 +185,6 @@ class TaskHandler extends Tasks {
         if (task.id === taskObj.id) {
           infoModal.innerHTML = `
             <p>${task.extraInfo}</p>`;
-          break;
         }
       }
     } else {
@@ -158,42 +192,54 @@ class TaskHandler extends Tasks {
         if (task.id === taskObj.id) {
           infoModal.innerHTML = `
         <p>${task.extraInfo}</p>`;
-          break;
         }
       }
     }
   }
 
-  actionTaskHandler(newTask, element, action, onGoingTasks, finishedTasks) {
+  actionTaskHandler(newTask, element, action, taskArray, elId) {
+    console.log('action->', taskArray)
+    console.log(action);
     const onGoingTaskList = document.querySelector('ul');
     const finishedTaskList = document.getElementById('finished-list');
     if (action === 'Finish') {
-      if (onGoingTaskList.children.length !== 0) {
-        const objIndex = onGoingTasks.findIndex(p => p.id === newTask.id);
-        console.log(objIndex);
-        console.log('ongoingBeforeEl->', onGoingTaskList.children.length);
-        onGoingTaskList.children[objIndex].remove();
-        console.log('ongoingAftEl->', onGoingTaskList.children.length);
-        console.log('onGoingBeforeArray->', onGoingTasks);
-        onGoingTasks = onGoingTasks.filter(
-          (p) => p.id !== newTask.id
-        ); // filters every element but the one we want to remove
+      // if (onGoingTaskList.children.length !== 0) {
+        const el = document.getElementById(elId);
+        console.log(el);
+        // const objIndex = taskArray.findIndex((p) => p.id === newTask.id);
+        // onGoingTaskList.children[objIndex].remove();
+        console.log('onGoingBeforeArray->', taskArray);
+        let updatedArray = taskArray.filter((p) => p.id !== newTask.id); // filters every element but the one we want to remove
         // this.onGoingTasks.splice(objIndex, 1);
-        console.log('onGoingAfterArray->', onGoingTasks);
-      }
-      this.newTaskElement(action, true, element, newTask);
+        console.log('onGoingAfterArray->', updatedArray);
+        this.newTaskElement(
+          action,
+          true,
+          element,
+          newTask,
+          updatedArray
+        );
+      // }
+      // else this.newTaskElement(action, true, element, newTask, onGoingTasks, finishedTasks);
     } else {
-      if (finishedTaskList.children.length !== 0) {
-        const objIndex = finishedTasks.findIndex(p => p.id === newTask.id);
-        console.log('finishedBeforeEl->', finishedTaskList.children.length);
-        finishedTaskList.children[objIndex].remove();
-        console.log('finishedAfterEl->', finishedTaskList.children.length);
-        console.log('finishedBeforeArray->', finishedTasks);
-        finishedTasks = finishedTasks.filter(p => p.id !== newTask.id);
+      // if (finishedTaskList.children.length !== 0) {
+        const el = document.getElementById(elId);
+        console.log(el);
+        // const objIndex = taskArray.findIndex((p) => p.id === newTask.id);
+        // finishedTaskList.children[objIndex].remove();
+        console.log('finishedBeforeArray->', taskArray);
+        let updatedArray = taskArray.filter((p) => p.id !== newTask.id);
         // finishedTasks.splice(objIndex, 1);
-        console.log('finishedAfterArray->', finishedTasks);
-      }
-      this.newTaskElement(action, true, element, newTask);
+        console.log('finishedAfterArray->', updatedArray);
+        this.newTaskElement(
+          action,
+          true,
+          element,
+          newTask,
+         updatedArray
+        );
+        // }else this.newTaskElement(action, true, element, newTask, onGoingTasks, finishedTasks);
+      // }
     }
   }
 }
@@ -203,7 +249,4 @@ const Task = new Tasks();
 const addTaskBtn = document.getElementById('add-task-btn');
 addTaskBtn.addEventListener('click', App.addTaskHandler.bind(App));
 const addTaskConfirm = document.getElementById('add-task-button-confirm');
-addTaskConfirm.addEventListener(
-  'click',
-  Task.newTaskElement.bind(Task, 'Finish', false)
-);
+addTaskConfirm.addEventListener('click', Task.createTask.bind(Task, 'Finish'));
