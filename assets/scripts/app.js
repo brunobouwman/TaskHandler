@@ -24,19 +24,16 @@ class Tasks {
     alreadyExists,
     element,
     newTask,
-    updatedArray,
-    id
+    updatedArray
   ) {
     if (action === 'Finish' && alreadyExists) {
       this.onGoingTasks = [...updatedArray];
-      console.log(action, 'copiedonGoingArray->', this.onGoingTasks);
       element.querySelector('button:last-of-type').textContent = 'Activate';
-      this.render('Activate', element, newTask, id);
+      this.render('Activate', element, newTask);
     } else {
       this.finishedTasks = [...updatedArray];
-      console.log(action, 'copiedonFinishedArray->', this.finishedTasks);
       element.querySelector('button:last-of-type').textContent = 'Finish';
-      this.render('Finish', element, newTask, id);
+      this.render('Finish', element, newTask);
     }
   }
 
@@ -67,7 +64,7 @@ class Tasks {
     return clonedElement;
   }
 
-  render(action, taskEl, newTask, id) {
+  render(action, taskEl, newTask) {
     const handlers = new TaskHandler();
     const onGoingTaskList = document.querySelector('ul');
     const finishedTaskList = document.getElementById('finished-list');
@@ -76,10 +73,8 @@ class Tasks {
     let actionBtn = taskEl.querySelector('button:last-of-type');
     actionBtn = this.clearEventListeners(actionBtn);
     if (action === 'Finish') {
-      console.log('onGoingBeforeArrayRender->', this.onGoingTasks);
       this.onGoingTasks.push(newTask);
-      console.log('onGoingAfterArrayRender->', this.onGoingTasks);
-      onGoingTaskList.append(taskEl);
+      onGoingTaskList.append(taskEl); //When you append an existing element, it automatically removes it from the previous location
       moreInfoBtn.addEventListener(
         'click',
         handlers.extraInfoHandler.bind(
@@ -96,8 +91,7 @@ class Tasks {
           newTask,
           taskEl,
           action,
-          this.onGoingTasks,
-          id
+          this.onGoingTasks
         )
       );
       console.log('eventGoing->', this.onGoingTasks);
@@ -197,21 +191,17 @@ class TaskHandler extends Tasks {
     }
   }
 
-  actionTaskHandler(newTask, element, action, taskArray, elId) {
+  actionTaskHandler(newTask, element, action, taskArray) {
     console.log('action->', taskArray)
-    console.log(action);
     const onGoingTaskList = document.querySelector('ul');
     const finishedTaskList = document.getElementById('finished-list');
     if (action === 'Finish') {
       // if (onGoingTaskList.children.length !== 0) {
-        const el = document.getElementById(elId);
-        console.log(el);
+        // const el = document.getElementById(elId);
         // const objIndex = taskArray.findIndex((p) => p.id === newTask.id);
         // onGoingTaskList.children[objIndex].remove();
-        console.log('onGoingBeforeArray->', taskArray);
         let updatedArray = taskArray.filter((p) => p.id !== newTask.id); // filters every element but the one we want to remove
         // this.onGoingTasks.splice(objIndex, 1);
-        console.log('onGoingAfterArray->', updatedArray);
         this.newTaskElement(
           action,
           true,
@@ -223,14 +213,10 @@ class TaskHandler extends Tasks {
       // else this.newTaskElement(action, true, element, newTask, onGoingTasks, finishedTasks);
     } else {
       // if (finishedTaskList.children.length !== 0) {
-        const el = document.getElementById(elId);
-        console.log(el);
         // const objIndex = taskArray.findIndex((p) => p.id === newTask.id);
         // finishedTaskList.children[objIndex].remove();
-        console.log('finishedBeforeArray->', taskArray);
         let updatedArray = taskArray.filter((p) => p.id !== newTask.id);
         // finishedTasks.splice(objIndex, 1);
-        console.log('finishedAfterArray->', updatedArray);
         this.newTaskElement(
           action,
           true,
