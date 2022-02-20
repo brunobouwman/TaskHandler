@@ -23,10 +23,10 @@ class Tasks {
     if (action === 'Finish' && alreadyExists) {
       element.querySelector('button:last-of-type').textContent = 'Activate';
       this.render('Activate', element, newTask);
-    }else if(action === 'Activate' && alreadyExists) {
+    } else if (action === 'Activate' && alreadyExists) {
       element.querySelector('button:last-of-type').textContent = 'Finish';
       this.render('Finish', element, newTask);
-    }else if(!alreadyExists) {
+    } else if (!alreadyExists) {
       const title = document.getElementById('title');
       const description = document.getElementById('description');
       const extraInfo = document.getElementById('extra-info');
@@ -71,23 +71,11 @@ class Tasks {
       console.log('onGoingAfterEl->', onGoingTaskList);
       moreInfoBtn.addEventListener(
         'click',
-        handlers.extraInfoHandler.bind(
-          handlers,
-          newTask,
-          this.onGoingTasks,
-          this.finishedTasks
-        )
-        );
-        actionBtn.addEventListener(
-          'click',
-          handlers.actionTaskHandler.bind(
-            handlers,
-            newTask,
-          taskEl,
-          action,
-          this.onGoingTasks,
-          this.finishedTasks
-        )
+        handlers.extraInfoHandler.bind(handlers, newTask, this.onGoingTasks, this.finishedTasks)
+      );
+      actionBtn.addEventListener(
+        'click',
+        handlers.actionTaskHandler.bind(handlers, newTask, taskEl, action, this.onGoingTasks, this.finishedTasks)
       );
     } else {
       console.log('FinishBeforeArray->', this.finishedTasks);
@@ -98,23 +86,11 @@ class Tasks {
       console.log('FinishAfterEl->', finishedTaskList);
       moreInfoBtn.addEventListener(
         'click',
-        handlers.extraInfoHandler.bind(
-          handlers,
-          newTask,
-          this.onGoingTasks,
-          this.finishedTasks
-        )
+        handlers.extraInfoHandler.bind(handlers, newTask, this.onGoingTasks, this.finishedTasks)
       );
       actionBtn.addEventListener(
         'click',
-        handlers.actionTaskHandler.bind(
-          handlers,
-          newTask,
-          taskEl,
-          action,
-          this.onGoingTasks,
-          this.finishedTasks
-        )
+        handlers.actionTaskHandler.bind(handlers, newTask, taskEl, action, this.onGoingTasks, this.finishedTasks)
       );
     }
     this.id++;
@@ -188,35 +164,34 @@ class TaskHandler extends Tasks {
     }
   }
 
-  actionTaskHandler(newTask, element, action, onGoingTasksArray, finishedTasksArray) {
+  actionTaskHandler(newTask, element, action, onGoingTasks, finishedTasks) {
     const onGoingTaskList = document.querySelector('ul');
     const finishedTaskList = document.getElementById('finished-list');
-    const objIndex = taskArray.findIndex(p => p.id === newTask.id);
-    // for (const task of taskArray) {
-    //   if (task.id === newTask.id) {
-    //     break;
-    //   } else taskIndex++;
-    // }
     if (action === 'Finish') {
       if (onGoingTaskList.children.length !== 0) {
+        const objIndex = onGoingTasks.findIndex(p => p.id === newTask.id);
+        console.log(objIndex);
         console.log('ongoingBeforeEl->', onGoingTaskList.children.length);
         onGoingTaskList.children[objIndex].remove();
         console.log('ongoingAftEl->', onGoingTaskList.children.length);
-        console.log('onGoingBeforeArray->', taskArray);
-        taskArray.splice(objIndex, 1);
-        console.log('onGoingAfterArray->', taskArray);
-
-        // taskArray = taskArray.filter(p => p.id !== newTask.id); // filters every element but the one we want to remove
+        console.log('onGoingBeforeArray->', onGoingTasks);
+        onGoingTasks = onGoingTasks.filter(
+          (p) => p.id !== newTask.id
+        ); // filters every element but the one we want to remove
+        // this.onGoingTasks.splice(objIndex, 1);
+        console.log('onGoingAfterArray->', onGoingTasks);
       }
       this.newTaskElement(action, true, element, newTask);
     } else {
       if (finishedTaskList.children.length !== 0) {
+        const objIndex = finishedTasks.findIndex(p => p.id === newTask.id);
         console.log('finishedBeforeEl->', finishedTaskList.children.length);
         finishedTaskList.children[objIndex].remove();
         console.log('finishedAfterEl->', finishedTaskList.children.length);
-        console.log('finishedBeforeArray->', taskArray);
-        taskArray.splice(objIndex, 1);
-        console.log('finishedAfterArray->', taskArray);
+        console.log('finishedBeforeArray->', finishedTasks);
+        finishedTasks = finishedTasks.filter(p => p.id !== newTask.id);
+        // finishedTasks.splice(objIndex, 1);
+        console.log('finishedAfterArray->', finishedTasks);
       }
       this.newTaskElement(action, true, element, newTask);
     }
