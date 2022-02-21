@@ -19,13 +19,7 @@ class Tasks {
     this.render('Finish', taskEl, newTask, id);
   }
 
-  newTaskElement(
-    action,
-    alreadyExists,
-    element,
-    newTask,
-    updatedArray
-  ) {
+  newTaskElement(action, alreadyExists, element, newTask, updatedArray) {
     if (action === 'Finish' && alreadyExists) {
       this.onGoingTasks = [...updatedArray];
       element.querySelector('button:last-of-type').textContent = 'Activate';
@@ -75,6 +69,7 @@ class Tasks {
     if (action === 'Finish') {
       this.onGoingTasks.push(newTask);
       onGoingTaskList.append(taskEl); //When you append an existing element, it automatically removes it from the previous location
+      taskEl.scrollIntoView();
       moreInfoBtn.addEventListener(
         'click',
         handlers.extraInfoHandler.bind(
@@ -94,12 +89,13 @@ class Tasks {
           this.onGoingTasks
         )
       );
-      console.log('eventGoing->', this.onGoingTasks);
     } else {
       console.log('FinishBeforeArrayRender->', this.finishedTasks);
       this.finishedTasks.push(newTask);
       console.log('FinishAfterArrayRender->', this.finishedTasks);
       finishedTaskList.append(taskEl);
+      // finishedTaskList.scrollTo(0, 5000);
+      taskEl.scrollIntoView();
       moreInfoBtn.addEventListener(
         'click',
         handlers.extraInfoHandler.bind(
@@ -170,7 +166,7 @@ class TaskHandler extends Tasks {
   }
 
   extraInfoHandler(taskObj, onGoingTasks, finishedTasks) {
-    console.log('ongoing->',  onGoingTasks,'finish->', finishedTasks)
+    console.log('ongoing->', onGoingTasks, 'finish->', finishedTasks);
     const infoModal = document.getElementById('more-info-modal-id');
     this.showBackdrop();
     infoModal.classList.add('visible');
@@ -192,43 +188,46 @@ class TaskHandler extends Tasks {
   }
 
   actionTaskHandler(newTask, element, action, taskArray) {
-    console.log('action->', taskArray)
+    console.log('action->', taskArray);
     const onGoingTaskList = document.querySelector('ul');
     const finishedTaskList = document.getElementById('finished-list');
     if (action === 'Finish') {
+      let updatedArray = taskArray.filter((p) => p.id !== newTask.id); // filters every element but the one we want to remove
+      this.newTaskElement(action, true, element, newTask, updatedArray);
       // if (onGoingTaskList.children.length !== 0) {
-        // const el = document.getElementById(elId);
-        // const objIndex = taskArray.findIndex((p) => p.id === newTask.id);
-        // onGoingTaskList.children[objIndex].remove();
-        let updatedArray = taskArray.filter((p) => p.id !== newTask.id); // filters every element but the one we want to remove
-        // this.onGoingTasks.splice(objIndex, 1);
-        this.newTaskElement(
-          action,
-          true,
-          element,
-          newTask,
-          updatedArray
-        );
+      // const el = document.getElementById(elId);
+      // const objIndex = taskArray.findIndex((p) => p.id === newTask.id);
+      // onGoingTaskList.children[objIndex].remove();
+      // this.onGoingTasks.splice(objIndex, 1);
       // }
       // else this.newTaskElement(action, true, element, newTask, onGoingTasks, finishedTasks);
     } else {
       // if (finishedTaskList.children.length !== 0) {
-        // const objIndex = taskArray.findIndex((p) => p.id === newTask.id);
-        // finishedTaskList.children[objIndex].remove();
-        let updatedArray = taskArray.filter((p) => p.id !== newTask.id);
-        // finishedTasks.splice(objIndex, 1);
-        this.newTaskElement(
-          action,
-          true,
-          element,
-          newTask,
-         updatedArray
-        );
-        // }else this.newTaskElement(action, true, element, newTask, onGoingTasks, finishedTasks);
+      // const objIndex = taskArray.findIndex((p) => p.id === newTask.id);
+      // finishedTaskList.children[objIndex].remove();
+      let updatedArray = taskArray.filter((p) => p.id !== newTask.id);
+      // finishedTasks.splice(objIndex, 1);
+      this.newTaskElement(action, true, element, newTask, updatedArray);
+      // }else this.newTaskElement(action, true, element, newTask, onGoingTasks, finishedTasks);
       // }
     }
   }
 }
+
+// class App {
+//   static init() {
+//     const Handlers = new TaskHandler();
+//     const Tasks = new Tasks();
+//     const addTaskBtn = document.getElementById('add-task-btn'); 
+//     addTaskBtn.addEventListener('click', Handlers.addTaskHandler.bind(Handlers));
+//     const addTaskConfirm = document.getElementById('add-task-button-confirm');
+//     addTaskConfirm.addEventListener(
+//       'click',
+//       Tasks.createTask.bind(Tasks, 'Finish')
+//     );
+//   }
+// }
+// App.init();
 
 const App = new TaskHandler();
 const Task = new Tasks();
