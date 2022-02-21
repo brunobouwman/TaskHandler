@@ -90,9 +90,7 @@ class Tasks {
         )
       );
     } else {
-      console.log('FinishBeforeArrayRender->', this.finishedTasks);
       this.finishedTasks.push(newTask);
-      console.log('FinishAfterArrayRender->', this.finishedTasks);
       finishedTaskList.append(taskEl);
       // finishedTaskList.scrollTo(0, 5000);
       taskEl.scrollIntoView();
@@ -115,7 +113,6 @@ class Tasks {
           this.finishedTasks
         )
       );
-      console.log('eventFinsihed->', this.finishedTasks);
     }
     this.id++;
     handlers.clearInputs();
@@ -166,7 +163,6 @@ class TaskHandler extends Tasks {
   }
 
   extraInfoHandler(taskObj, onGoingTasks, finishedTasks) {
-    console.log('ongoing->', onGoingTasks, 'finish->', finishedTasks);
     const infoModal = document.getElementById('more-info-modal-id');
     this.showBackdrop();
     infoModal.classList.add('visible');
@@ -188,7 +184,6 @@ class TaskHandler extends Tasks {
   }
 
   actionTaskHandler(newTask, element, action, taskArray) {
-    console.log('action->', taskArray);
     const onGoingTaskList = document.querySelector('ul');
     const finishedTaskList = document.getElementById('finished-list');
     if (action === 'Finish') {
@@ -218,7 +213,7 @@ class TaskHandler extends Tasks {
 //   static init() {
 //     const Handlers = new TaskHandler();
 //     const Tasks = new Tasks();
-//     const addTaskBtn = document.getElementById('add-task-btn'); 
+//     const addTaskBtn = document.getElementById('add-task-btn');
 //     addTaskBtn.addEventListener('click', Handlers.addTaskHandler.bind(Handlers));
 //     const addTaskConfirm = document.getElementById('add-task-button-confirm');
 //     addTaskConfirm.addEventListener(
