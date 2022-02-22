@@ -30,6 +30,7 @@ class Tasks {
     }
   }
 
+
   createTask(action) {
     const title = document.getElementById('title');
     const description = document.getElementById('description');
@@ -234,20 +235,36 @@ Handlers.dragTaskHandler(finishedList);
 
 activeList.addEventListener('drop', (event) => {
   const projId = event.dataTransfer.getData('text/plain');
-  if (Task.onGoingTasks.find((p) => p.id === projId)) {
+  const task = document.getElementById(projId);
+  let check = false;
+  for (let i=0;i<activeList.children.length;i++) {
+    if (activeList.children[i].textContent === task.textContent) {
+      check = true;
+    }
+  }
+  if (check){
     return;
-  }else 
+  }else {
   document.getElementById(projId).querySelector('button:last-of-type').click();
   activeList.parentElement.classList.remove('droppable');
   event.preventDefault();
+  }
 });
 
 finishedList.addEventListener('drop', (event) => {
   const projId = event.dataTransfer.getData('text/plain');
-  if (Task.finishedTasks.find((p) => p.id === projId)) {
+  const task = document.getElementById(projId);
+  let check = false;
+  for (let i=0;i<finishedList.children.length;i++) {
+    if(finishedList.children[i].textContent === task.textContent) {
+      check = true;
+    }
+  }
+  if(check){
     return;
-  } else
+  }else {
   document.getElementById(projId).querySelector('button:last-of-type').click();
   finishedList.parentElement.classList.remove('droppable');
   event.preventDefault();
+  }
 });
