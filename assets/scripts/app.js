@@ -17,19 +17,18 @@ class Tasks {
 
   newTaskObj(title, description, extraInfo, id, taskEl) {
     const newTask = new TaskCreator(title, description, extraInfo, id);
-    this.render('Finish', taskEl, newTask);
+    this.render('Finish', taskEl, newTask, false);
   }
 
   newTaskElement(action, element, newTask) {
     if (action === 'Finish') {
       element.querySelector('button:last-of-type').textContent = 'Activate';
-      this.render('Activate', element, newTask);
+      this.render('Activate', element, newTask, true);
     } else {
       element.querySelector('button:last-of-type').textContent = 'Finish';
-      this.render('Finish', element, newTask);
+      this.render('Finish', element, newTask, true);
     }
   }
-
 
   createTask(action) {
     const title = document.getElementById('title');
@@ -37,14 +36,15 @@ class Tasks {
     const extraInfo = document.getElementById('extra-info');
     const taskElement = document.createElement('li');
     this.addTaskEventListener(taskElement, this.id);
-    taskElement.id = this.id;
     taskElement.setAttribute('draggable', true);
+    taskElement.id = this.id;
     taskElement.classList = 'card';
     taskElement.innerHTML = `
     <h2>${title.value}</h2>
     <p>${description.value}</p>
     <button class="alt">More Info</button>
-    <button >${action}</button>`;
+    <button id="delete">Delete</button>
+    <button class="hidden">${action}</button>`;
     this.newTaskObj(
       title.value,
       description.value,
@@ -57,7 +57,7 @@ class Tasks {
 
   /* <-- VERY IMPORTANT --> */
   clearEventListeners(element) {
-    const clonedElement = element.cloneNode(true); //Makes a deep clone
+    const clonedElement = element.cloneNode(true); /// true makes a deep clone
     element.replaceWith(clonedElement);
     return clonedElement;
   }
@@ -69,42 +69,51 @@ class Tasks {
     });
   }
 
-  render(action, taskEl, newTask) {
+  buttonsListeners(action, taskEl, newTask, exists) {
     const handlers = new TaskHandler();
+    handlers.removeBackAndModal();
+    const buttons = taskEl.querySelectorAll('button');
+    let moreInfoBtn = buttons[0];
+    let deleteBtn = buttons[1];
+    let actionBtn = buttons[2];
+    moreInfoBtn = this.clearEventListeners(moreInfoBtn);
+    actionBtn = this.clearEventListeners(actionBtn); //makes a deep clone
+    deleteBtn = this.clearEventListeners(deleteBtn);
+    actionBtn.addEventListener(
+      'click',
+      handlers.actionTaskHandler.bind(this, newTask, taskEl, action)
+    );
+    handlers.clearInputs();
+    moreInfoBtn.addEventListener(
+      'click',
+      handlers.extraInfoHandler.bind(
+        handlers,
+        newTask,
+        this.onGoingTasks,
+        this.finishedTasks
+      )
+    );
+      deleteBtn.addEventListener(
+        'click',
+        handlers.deleteBtnHandler.bind(this, newTask, taskEl, action)
+      );
+     return taskEl;
+  }
+
+  render(action, taskEl, newTask, exists) {
     const onGoingTaskList = document.querySelector('ul');
     const finishedTaskList = document.getElementById('finished-list');
-    handlers.removeBackAndModal();
-    const moreInfoBtn = taskEl.querySelector('button');
-    let actionBtn = taskEl.querySelector('button:last-of-type');
-    actionBtn = this.clearEventListeners(actionBtn, true); //makes a deep clone
-    // actionBtn = this.clearEventListeners(actionBtn);
+    taskEl = this.buttonsListeners(action, taskEl, newTask, exists);
     if (action === 'Finish') {
       this.onGoingTasks.push(newTask);
       onGoingTaskList.append(taskEl); //When you append an existing element, it automatically removes it from the previous location
       taskEl.scrollIntoView({ behavior: 'smooth' }); //Can also use top and left as properties inside that object. ex {top: 50, left: 50, behavior: 'smooth'};
-      moreInfoBtn.addEventListener(
-        'click',
-        handlers.extraInfoHandler.bind(this, newTask)
-      );
-      actionBtn.addEventListener(
-        'click',
-        handlers.actionTaskHandler.bind(this, newTask, taskEl, action)
-      );
     } else {
       this.finishedTasks.push(newTask);
       finishedTaskList.append(taskEl);
       // finishedTaskList.scrollTo(0, 5000);
       taskEl.scrollIntoView({ behavior: 'smooth' }); //smooth transition
-      moreInfoBtn.addEventListener(
-        'click',
-        handlers.extraInfoHandler.bind(this, newTask)
-      );
-      actionBtn.addEventListener(
-        'click',
-        handlers.actionTaskHandler.bind(this, newTask, taskEl, action)
-      );
     }
-    handlers.clearInputs();
   }
 }
 
@@ -171,23 +180,15 @@ class TaskHandler extends Tasks {
     });
   }
 
-  extraInfoHandler(taskObj) {
+  extraInfoHandler(taskObj, activeArray, finishedArray) {
+    const combinedArray = activeArray.concat(finishedArray);
     const infoModal = document.getElementById('more-info-modal-id');
     this.showBackdrop();
     infoModal.classList.add('visible');
-    if (this.onGoingTasks.includes(taskObj)) {
-      for (const task of this.onGoingTasks) {
-        if (task.id === taskObj.id) {
-          infoModal.innerHTML = `
-            <p>${task.extraInfo}</p>`;
-        }
-      }
-    } else {
-      for (const task of this.finishedTasks) {
-        if (task.id === taskObj.id) {
-          infoModal.innerHTML = `
-        <p>${task.extraInfo}</p>`;
-        }
+    for (const task of combinedArray) {
+      if (task.id === taskObj.id) {
+        infoModal.innerHTML = `
+          <p>${task.extraInfo}</p>`;
       }
     }
   }
@@ -203,6 +204,26 @@ class TaskHandler extends Tasks {
       );
       // finishedTasks.splice(objIndex, 1);
       this.newTaskElement(action, element, newTask);
+    }
+  }
+
+  deleteBtnHandler(task, element) {
+    const onGoingTaskList = document.querySelector('ul');
+    const finishedTaskList = document.getElementById('finished-list');
+    if (this.onGoingTasks.includes(task)) {
+      this.onGoingTasks = this.onGoingTasks.filter((p) => p.id !== task.id);
+      for (let i = 0; i < onGoingTaskList.children.length; i++) {
+        if (onGoingTaskList.children[i].textContent === element.textContent) {
+          onGoingTaskList.children[i].remove();
+        }
+      }
+    } else {
+      this.finishedTasks = this.finishedTasks.filter((p) => p.id !== task.id);
+      for (let i = 0; i < finishedTaskList.children.length; i++) {
+        if (finishedTaskList.children[i].textContent === element.textContent) {
+          finishedTaskList.children[i].remove();
+        }
+      }
     }
   }
 }
@@ -237,17 +258,20 @@ activeList.addEventListener('drop', (event) => {
   const projId = event.dataTransfer.getData('text/plain');
   const task = document.getElementById(projId);
   let check = false;
-  for (let i=0;i<activeList.children.length;i++) {
+  for (let i = 0; i < activeList.children.length; i++) {
     if (activeList.children[i].textContent === task.textContent) {
       check = true;
     }
   }
-  if (check){
+  if (check) {
     return;
-  }else {
-  document.getElementById(projId).querySelector('button:last-of-type').click();
-  activeList.parentElement.classList.remove('droppable');
-  event.preventDefault();
+  } else {
+    document
+      .getElementById(projId)
+      .querySelector('button:last-of-type')
+      .click();
+    activeList.parentElement.classList.remove('droppable');
+    event.preventDefault();
   }
 });
 
@@ -255,16 +279,19 @@ finishedList.addEventListener('drop', (event) => {
   const projId = event.dataTransfer.getData('text/plain');
   const task = document.getElementById(projId);
   let check = false;
-  for (let i=0;i<finishedList.children.length;i++) {
-    if(finishedList.children[i].textContent === task.textContent) {
+  for (let i = 0; i < finishedList.children.length; i++) {
+    if (finishedList.children[i].textContent === task.textContent) {
       check = true;
     }
   }
-  if(check){
+  if (check) {
     return;
-  }else {
-  document.getElementById(projId).querySelector('button:last-of-type').click();
-  finishedList.parentElement.classList.remove('droppable');
-  event.preventDefault();
+  } else {
+    document
+      .getElementById(projId)
+      .querySelector('button:last-of-type')
+      .click();
+    finishedList.parentElement.classList.remove('droppable');
+    event.preventDefault();
   }
 });
